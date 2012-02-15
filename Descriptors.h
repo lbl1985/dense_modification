@@ -285,57 +285,132 @@ void OpticalFlowTracker(IplImage* flow, // the optical field
 }
 
 /* check whether a trajectory is valid or not */
+// wrapper functioin for original isValid. This is designed for output relative/velocity index (original isValid function)
+int isValid_rel(std::vector<CvPoint2D32f>& track, float& mean_x, float& mean_y, float& var_x, float& var_y, float& length)
+{
+    int size = track.size();
+    for(int i = 0; i < size; i++) {
+            mean_x += track[i].x;
+            mean_y += track[i].y;
+    }
+    mean_x /= size;
+    mean_y /= size;
+
+    for(int i = 0; i < size; i++) {
+            track[i].x -= mean_x;
+            var_x += track[i].x*track[i].x;
+            track[i].y -= mean_y;
+            var_y += track[i].y*track[i].y;
+    }
+    var_x /= size;
+    var_y /= size;
+    var_x = sqrt(var_x);
+    var_y = sqrt(var_y);
+    // remove static trajectory
+    if(var_x < min_var && var_y < min_var)
+            return 0;
+    // remove random trajectory
+    if( var_x > max_var || var_y > max_var )
+            return 0;
+
+    for(int i = 1; i < size; i++) {
+            float temp_x = track[i].x - track[i-1].x;
+            float temp_y = track[i].y - track[i-1].y;
+            length += sqrt(temp_x*temp_x+temp_y*temp_y);
+            track[i-1].x = temp_x;
+            track[i-1].y = temp_y;
+    }
+
+    float len_thre = length*0.7;
+    for( int i = 0; i < size-1; i++ ) {
+            float temp_x = track[i].x;
+            float temp_y = track[i].y;
+            float temp_dis = sqrt(temp_x*temp_x + temp_y*temp_y);
+            if( temp_dis > max_dis && temp_dis > len_thre )
+                    return 0;
+    }
+
+    track.pop_back();
+    // normalize the trajectory
+    for(int i = 0; i < size-1; i++) {
+            track[i].x /= length;
+            track[i].y /= length;
+    }
+    return 1;
+}
+
+/* check whether a trajectory is valid or not */
+// wrapper functioin for original isValid. This is designed for output absolution postion index
+int isValid_abs(std::vector<CvPoint2D32f>& track, float& mean_x, float& mean_y, float& var_x, float& var_y, float& length)
+{
+    int size = track.size();
+    for(int i = 0; i < size; i++) {
+            mean_x += track[i].x;
+            mean_y += track[i].y;
+    }
+    mean_x /= size;
+    mean_y /= size;
+
+    for(int i = 0; i < size; i++) {
+            track[i].x -= mean_x;
+            var_x += track[i].x*track[i].x;
+            track[i].y -= mean_y;
+            var_y += track[i].y*track[i].y;
+    }
+    var_x /= size;
+    var_y /= size;
+    var_x = sqrt(var_x);
+    var_y = sqrt(var_y);
+    // remove static trajectory
+    if(var_x < min_var && var_y < min_var)
+            return 0;
+    // remove random trajectory
+    if( var_x > max_var || var_y > max_var )
+            return 0;
+
+    for(int i = 1; i < size; i++) {
+            float temp_x = track[i].x - track[i-1].x;
+            float temp_y = track[i].y - track[i-1].y;
+            length += sqrt(temp_x*temp_x+temp_y*temp_y);
+            // comment out this section since, this is where velocity comes in
+//            track[i-1].x = temp_x;
+//            track[i-1].y = temp_y;
+    }
+
+    float len_thre = length*0.7;
+    for( int i = 0; i < size-1; i++ ) {
+        // recomput the velocity above for criterion check
+            float temp_x = track[i].x - track[i-1].x;
+            float temp_y = track[i].y - track[i-1].y;
+            float temp_dis = sqrt(temp_x*temp_x + temp_y*temp_y);
+            if( temp_dis > max_dis && temp_dis > len_thre )
+                    return 0;
+    }
+
+    // Adding the mean back
+    for (int i = 0; i < size; i++){
+        track[i].x += mean_x;
+        track[i].y += mean_y;
+    }
+
+    // remove the last point of the trajectory. e.g. the 16 point for trajLenght = 15;
+    track.pop_back();
+    // normalize the trajectory
+//    for(int i = 0; i < size-1; i++) {
+//            track[i].x /= length;
+//            track[i].y /= length;
+//    }
+    return 1;
+}
+
+/* check whether a trajectory is valid or not */
 int isValid(std::vector<CvPoint2D32f>& track, float& mean_x, float& mean_y, float& var_x, float& var_y, float& length)
 {
-	int size = track.size();
-	for(int i = 0; i < size; i++) {
-		mean_x += track[i].x;
-		mean_y += track[i].y;
-	}
-	mean_x /= size;
-	mean_y /= size;
+    if (isAbs == 0)
+        return isValid_rel(track, mean_x, mean_y, var_x, var_y, length);
+    else
+        return isValid_abs(track, mean_x, mean_y, var_x, var_y, length);
 
-	for(int i = 0; i < size; i++) {
-		track[i].x -= mean_x;
-		var_x += track[i].x*track[i].x;
-		track[i].y -= mean_y;
-		var_y += track[i].y*track[i].y;
-	}
-	var_x /= size;
-	var_y /= size;
-	var_x = sqrt(var_x);
-	var_y = sqrt(var_y);
-	// remove static trajectory
-	if(var_x < min_var && var_y < min_var)
-		return 0;
-	// remove random trajectory
-	if( var_x > max_var || var_y > max_var )
-		return 0;
-
-	for(int i = 1; i < size; i++) {
-		float temp_x = track[i].x - track[i-1].x;
-		float temp_y = track[i].y - track[i-1].y;
-		length += sqrt(temp_x*temp_x+temp_y*temp_y);
-		track[i-1].x = temp_x;
-		track[i-1].y = temp_y;
-	}
-
-	float len_thre = length*0.7;
-	for( int i = 0; i < size-1; i++ ) {
-		float temp_x = track[i].x;
-		float temp_y = track[i].y;
-		float temp_dis = sqrt(temp_x*temp_x + temp_y*temp_y);
-		if( temp_dis > max_dis && temp_dis > len_thre )
-			return 0;
-	}
-
-	track.pop_back();
-	// normalize the trajectory
-	for(int i = 0; i < size-1; i++) {
-		track[i].x /= length;
-		track[i].y /= length;
-	}
-	return 1;
 }
 
 /* detect new feature points in the whole image */
