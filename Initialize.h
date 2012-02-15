@@ -55,13 +55,15 @@ void usage()
 	fprintf(stderr, "  -s [spatial cells]        The number of cells in the nxy axis (default: nxy=2 cells)\n");
 	fprintf(stderr, "  -t [temporal cells]       The number of cells in the nt axis (default: nt=3 cells)\n");
         fprintf(stderr, "  -q [quality]              The percent of eigenvalue accoridng to the largest in one frame quality = 1 / input value \n");
+        fprintf(stderr, "  -v [visualization]        The indicator for visualize the tracks or not. default = 0");
+        fprintf(stderr, "  -m [max variance]         The maximum variance of a trajectory. default = 50");
 }
 
 void arg_parse(int argc, char** argv)
 {
 	int c;
 	char* executable = basename(argv[0]);
-        while((c = getopt (argc, argv, "hS:E:L:W:N:s:t:q:")) != -1)
+        while((c = getopt (argc, argv, "hS:E:L:W:N:s:t:q:v:m:")) != -1)
 	switch(c) {
 		case 'S':
 		start_frame = atoi(optarg);
@@ -87,6 +89,12 @@ void arg_parse(int argc, char** argv)
                 case 'q':
                 quality = 1/double(atoi(optarg));
                 break;
+                case 'v':
+                show_track = atoi(optarg);
+                break;
+                case 'm':  // m stands for maximum variance
+                max_var = atoi(optarg);
+                break;
 
 		case 'h':
 		usage();
@@ -97,6 +105,8 @@ void arg_parse(int argc, char** argv)
 		fprintf(stderr, "error parsing arguments at -%c\n  Try '%s -h' for help.", c, executable );
 		abort();
 	}
+        // no matter whether max_var has been the argument input or not. it will be constant
+        const float max_var = max_var;
 }
 
 #endif /*INITIALIZE_H_*/
