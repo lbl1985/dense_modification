@@ -49,8 +49,9 @@ const float max_dis = 20;
 int scale_num = 8;  
 const float scale_stride = sqrt(2);
 
-// parameter for visualization
+// parameter for visualization/output
 int show_track = 0;
+int isAbs = 0;
 
 typedef struct TrackerInfo
 {

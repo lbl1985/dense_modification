@@ -55,15 +55,16 @@ void usage()
 	fprintf(stderr, "  -s [spatial cells]        The number of cells in the nxy axis (default: nxy=2 cells)\n");
 	fprintf(stderr, "  -t [temporal cells]       The number of cells in the nt axis (default: nt=3 cells)\n");
         fprintf(stderr, "  -q [quality]              The percent of eigenvalue accoridng to the largest in one frame quality = 1 / input value \n");
-        fprintf(stderr, "  -v [visualization]        The indicator for visualize the tracks or not. default = 0");
-        fprintf(stderr, "  -m [max variance]         The maximum variance of a trajectory. default = 50");
+        fprintf(stderr, "  -v [visualization]        The indicator for visualize the tracks or not. default = 0\n");
+        fprintf(stderr, "  -m [max variance]         The maximum variance of a trajectory. default = 50\n");
+        fprintf(stderr, "  -a [absolut index]        The indicator for output absolut pixel locations or relative/velocity locations. default is 0 (relative locations)");
 }
 
 void arg_parse(int argc, char** argv)
 {
 	int c;
 	char* executable = basename(argv[0]);
-        while((c = getopt (argc, argv, "hS:E:L:W:N:s:t:q:v:m:")) != -1)
+        while((c = getopt (argc, argv, "hS:E:L:W:N:s:t:q:v:m:a:")) != -1)
 	switch(c) {
 		case 'S':
 		start_frame = atoi(optarg);
@@ -94,6 +95,9 @@ void arg_parse(int argc, char** argv)
                 break;
                 case 'm':  // m stands for maximum variance
                 max_var = atoi(optarg);
+                break;
+                case 'a':
+                isAbs = atoi(optarg);
                 break;
 
 		case 'h':
