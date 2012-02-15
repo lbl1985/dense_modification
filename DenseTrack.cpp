@@ -6,7 +6,7 @@ IplImageWrapper image, prev_image, grey, prev_grey, orig;
 IplImagePyramid grey_pyramid, prev_grey_pyramid, eig_pyramid;
 
 float* fscales = 0; // float scale values
-int show_track = 1; // set show_track = 1, if you want to visualize the trajectories
+//int show_track = 1; // set show_track = 1, if you want to visualize the trajectories
 
 int main( int argc, char** argv )
 {

@@ -42,12 +42,15 @@ int track_length = 15;
 
 // parameters for the trajectory descriptor
 const float min_var = sqrt(3);
-const float max_var = 50;
+float max_var = 50;
 const float max_dis = 20;
 
 // parameters for multi-scale
 int scale_num = 8;  
 const float scale_stride = sqrt(2);
+
+// parameter for visualization
+int show_track = 0;
 
 typedef struct TrackerInfo
 {
