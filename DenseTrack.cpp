@@ -2,7 +2,7 @@
 #include "Descriptors.h"
 #include "Initialize.h"
 
-IplImageWrapper image, prev_image, grey, prev_grey, orig;
+IplImageWrapper image, prev_image, grey, prev_grey, orig, validTrack;
 IplImagePyramid grey_pyramid, prev_grey_pyramid, eig_pyramid;
 
 float* fscales = 0; // float scale values
@@ -31,6 +31,7 @@ int main( int argc, char** argv )
         if( show_track == 1 ){
 		cvNamedWindow( "DenseTrack", 0 );
                 cvNamedWindow("Original", 0);
+                cvNamedWindow("ValidTrack", 0);
         }
 
 
@@ -51,7 +52,9 @@ int main( int argc, char** argv )
 		if( !image ) {
 			// initailize all the buffers
 			image = IplImageWrapper( cvGetSize(frame), 8, 3 );
+                        validTrack = IplImageWrapper(cvGetSize(frame), 8, 3);
 			image->origin = frame->origin;
+//                        validTrack->origin = frame->origin;
 			prev_image= IplImageWrapper( cvGetSize(frame), 8, 3 );
 			prev_image->origin = frame->origin;
 			grey = IplImageWrapper( cvGetSize(frame), 8, 1 );
@@ -61,6 +64,8 @@ int main( int argc, char** argv )
 			eig_pyramid = IplImagePyramid( cvGetSize(frame), 32, 1, scale_stride );
 
 			cvCopy( frame, image, 0 );
+                        validTrack = frame.clone();
+//                        cvCopy(frame, validTrack, 0);
 			cvCvtColor( image, grey, CV_BGR2GRAY );
 			grey_pyramid.rebuild( grey );
 
@@ -96,6 +101,8 @@ int main( int argc, char** argv )
 
 		// build the image pyramid for the current frame
 		cvCopy( frame, image, 0 );
+                validTrack = frame.clone();
+//                cvCopy(frame, validTrack, 0);
 		cvCvtColor( image, grey, CV_BGR2GRAY );
 		grey_pyramid.rebuild(grey);
 
@@ -157,8 +164,8 @@ int main( int argc, char** argv )
 				PointDesc point(hogInfo, hofInfo, mbhInfo, points_out[i]);
 				iTrack->addPointDesc(point);
 
-				// draw this track
-				if( show_track == 1 ) {
+                                // draw this track when output relative / velocity info
+                                if( show_track == 1) {
 					std::list<PointDesc>& descs = iTrack->pointDescs;
 					std::list<PointDesc>::iterator iDesc = descs.begin();
 					float length = descs.size();
@@ -214,6 +221,19 @@ int main( int argc, char** argv )
 
 					for (int count = 0; count < tracker.trackLength; ++count)
 						printf("%f\t%f\t", trajectory[count].x,trajectory[count].y );
+
+                                        // Visualization for valid trajecotries only also only show 15 frames
+                                        // draw this track when output absolute / location info
+                                        if( show_track == 1 && isAbs == 1) {
+                                                float length = tracker.trackLength;
+
+                                                for (float j = 0; j < length -1; ++j) {
+                                                    cvLine(validTrack, cvPointFrom32f(trajectory[j]), cvPointFrom32f(trajectory[j+1]),
+                                                                   CV_RGB(0,cvFloor(255.0*(j+1.0)/length),0), 2, 8,0);
+                                                }
+                                                cvCircle(validTrack, cvPointFrom32f(trajectory[length -1]), 2, CV_RGB(255,0,0), -1, 8,0);
+                                        }
+
 
 					iDesc = descs.begin();
 					int t_stride = cvFloor(tracker.trackLength/hogInfo.ntCells);
@@ -307,6 +327,7 @@ int main( int argc, char** argv )
 		if( show_track == 1 ) {
 			cvShowImage( "DenseTrack", image);
                         cvShowImage("Original", frame);
+                        cvShowImage("validTrack", validTrack);
 			c = cvWaitKey(3);
 			if((char)c == 27) break;
 		}
