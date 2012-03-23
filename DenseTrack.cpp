@@ -2,7 +2,7 @@
 #include "Descriptors.h"
 #include "Initialize.h"
 
-IplImageWrapper image, prev_image, grey, prev_grey, orig, validTrack;
+IplImageWrapper image, prev_image, grey, prev_grey, orig, validTrack, denseTrack;
 IplImagePyramid grey_pyramid, prev_grey_pyramid, eig_pyramid;
 
 float* fscales = 0; // float scale values
@@ -29,7 +29,7 @@ int main( int argc, char** argv )
 	InitDescInfo(&mbhInfo, 8, 0, 1, patch_size, nxy_cell, nt_cell);
 
         if( show_track == 1 ){
-		cvNamedWindow( "DenseTrack", 0 );
+                cvNamedWindow("DenseTrack", 0 );
                 cvNamedWindow("Original", 0);
                 cvNamedWindow("ValidTrack", 0);
         }
@@ -53,8 +53,8 @@ int main( int argc, char** argv )
 			// initailize all the buffers
 			image = IplImageWrapper( cvGetSize(frame), 8, 3 );
                         validTrack = IplImageWrapper(cvGetSize(frame), 8, 3);
+                        denseTrack = IplImageWrapper(cvGetSize(frame), 8, 3);
 			image->origin = frame->origin;
-//                        validTrack->origin = frame->origin;
 			prev_image= IplImageWrapper( cvGetSize(frame), 8, 3 );
 			prev_image->origin = frame->origin;
 			grey = IplImageWrapper( cvGetSize(frame), 8, 1 );
@@ -65,7 +65,8 @@ int main( int argc, char** argv )
 
 			cvCopy( frame, image, 0 );
                         validTrack = frame.clone();
-//                        cvCopy(frame, validTrack, 0);
+                        denseTrack = frame.clone();
+
 			cvCvtColor( image, grey, CV_BGR2GRAY );
 			grey_pyramid.rebuild( grey );
 
@@ -102,7 +103,7 @@ int main( int argc, char** argv )
 		// build the image pyramid for the current frame
 		cvCopy( frame, image, 0 );
                 validTrack = frame.clone();
-//                cvCopy(frame, validTrack, 0);
+                denseTrack = frame.clone();
 		cvCvtColor( image, grey, CV_BGR2GRAY );
 		grey_pyramid.rebuild(grey);
 
@@ -179,11 +180,11 @@ int main( int argc, char** argv )
 						point1.x *= fscales[ixyScale];
 						point1.y *= fscales[ixyScale];
 
-						cvLine(image, cvPointFrom32f(point0), cvPointFrom32f(point1),
+                                                cvLine(denseTrack, cvPointFrom32f(point0), cvPointFrom32f(point1),
 							   CV_RGB(0,cvFloor(255.0*(j+1.0)/length),0), 2, 8,0);
 						point0 = point1;
 					}
-					cvCircle(image, cvPointFrom32f(point0), 2, CV_RGB(255,0,0), -1, 8,0);
+                                        cvCircle(denseTrack, cvPointFrom32f(point0), 2, CV_RGB(255,0,0), -1, 8,0);
 				}
 				++iTrack;
 			}
@@ -324,9 +325,9 @@ int main( int argc, char** argv )
 		prev_grey_pyramid.rebuild(prev_grey);
 		}
 
-		if( show_track == 1 ) {
-			cvShowImage( "DenseTrack", image);
+		if( show_track == 1 ) {                        
                         cvShowImage("Original", frame);
+                        cvShowImage("DenseTrack", denseTrack);
                         cvShowImage("validTrack", validTrack);
 			c = cvWaitKey(3);
 			if((char)c == 27) break;
@@ -336,8 +337,11 @@ int main( int argc, char** argv )
 			break;
 	}
 
-	if( show_track == 1 )
+        if( show_track == 1 ){
 		cvDestroyWindow("DenseTrack");
+                cvDestroyWindow("Original");
+                cvDestroyWindow("validTrack");
+        }
 
 	return 0;
 }

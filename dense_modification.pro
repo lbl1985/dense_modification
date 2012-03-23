@@ -15,7 +15,7 @@ CONFIG   -= app_bundle
 TEMPLATE = app
 
 
-SOURCES += main.cpp \
+SOURCES += \
     ffpp/Stream.cpp \
     ffpp/ScalerContext.cpp \
     ffpp/PixelFormat.c \

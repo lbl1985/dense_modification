@@ -343,6 +343,8 @@ int isValid_rel(std::vector<CvPoint2D32f>& track, float& mean_x, float& mean_y, 
 // wrapper functioin for original isValid. This is designed for output absolution postion index
 int isValid_abs(std::vector<CvPoint2D32f>& track, float& mean_x, float& mean_y, float& var_x, float& var_y, float& length)
 {
+    std::vector<CvPoint2D32f> backup = track;
+
     int size = track.size();
     for(int i = 0; i < size; i++) {
             mean_x += track[i].x;
@@ -393,6 +395,7 @@ int isValid_abs(std::vector<CvPoint2D32f>& track, float& mean_x, float& mean_y, 
         track[i].y += mean_y;
     }
 
+    track = backup;
     // remove the last point of the trajectory. e.g. the 16 point for trajLenght = 15;
     track.pop_back();
     // normalize the trajectory
