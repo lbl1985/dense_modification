@@ -1,0 +1,8 @@
+-> master
+--> visualize
+--> variousLength
+
+-> 23-Mar-2012 11:45AM
+   branch variousLength(create; lbl1985-GPU)
+   extract various length trajectories with min length limition. 
+   Output various length trajectories, with one trajectory each line.
